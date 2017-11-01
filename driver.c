@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 
@@ -22,6 +23,8 @@ typedef enum {
     "code\n"                                                                \
     "       -x Load <in_file> and execute it\n"                             \
     "\n"                                                                    \
+    "       --input Set #0 to input value\n"                                \
+    "\n"                                                                    \
     "       <in_file> the file name to be used by commands above"
 
 int main(int argc, char **argv)
@@ -32,6 +35,8 @@ int main(int argc, char **argv)
     int ignore_option = 0;
     int out_fd = -1;
     int in_fd = -1;
+
+    int vm_init_val = 0;
 
     for (int i = 1; i < argc; i++) {
         if (ignore_option)
@@ -58,6 +63,10 @@ int main(int argc, char **argv)
             if (in_file)
                 FATAL(-1, "more than one input file, see -h\n");
             in_file = argv[i];
+        } else if (!strcmp(argv[i], "--input")) {
+            if (!argv[i + 1])
+                FATAL(-1, "--input need a integer as argument, see -h\n");
+            vm_init_val = atoi(argv[++i]);
         } else if (argv[i][0] == '-')
             FATAL(-1, "unsupported argument '%s', see -h\n", argv[i]);
         else if (in_file)
@@ -104,6 +113,7 @@ int main(int argc, char **argv)
     switch (req) {
     case ASSEMBLE_AND_EVAL: {
         vm_env *env = vm_new();
+        vm_set_temp_value(env, 0, vm_init_val);
         assemble_from_fd(env, in_fd);
         hook_opcodes(env);
         vm_run(env);
@@ -114,6 +124,7 @@ int main(int argc, char **argv)
         int len;
 
         vm_env *env = vm_new();
+        vm_set_temp_value(env, 0, vm_init_val);
         assemble_from_fd(env, in_fd);
         len = write_to_elf(env, out_fd);
         vm_free(env);
@@ -124,6 +135,7 @@ int main(int argc, char **argv)
     }
     case LOAD_ELF_AND_EVAL: {
         vm_env *env = vm_new();
+        vm_set_temp_value(env, 0, vm_init_val);
         load_from_elf(env, in_fd);
         hook_opcodes(env);
         vm_run(env);
