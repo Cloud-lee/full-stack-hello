@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "vm.h"
@@ -17,7 +18,12 @@
 
 #define BEGIN_OPCODES                          \
     const static void *labels[] = {OP_LABELS}; \
+    int exec_instr_cnt = 0;                    \
     goto *labels[OPCODE.opcode]
+
+#define PROFILING exec_instr_cnt += 1;
+
+#define PROFILE_SHOW printf("instructions: %d\n", exec_instr_cnt);
 
 #define DISPATCH                     \
     do {                             \
@@ -39,18 +45,21 @@ static inline void vm_push(vm_env *env, size_t n);
 
 #define VM_CALL(n)               \
     do {                         \
+        PROFILING;               \
         vm_push(env, env->r.pc); \
         GOTO(n);                 \
     } while (0)
 
 #define VM_RET()                     \
     do {                             \
+        PROFILING;                   \
         size_t pc = vm_pop(env) + 1; \
         GOTO(pc);                    \
     } while (0)
 
 #define VM_J_TYPE_INST(cond)                                     \
     do {                                                         \
+        PROFILING;                                               \
         int gle = vm_get_op_value(env, &OPCODE.op1)->value.vint; \
         if (gle cond 0)                                          \
             GOTO(OPCODE.op2.value.id);                           \
@@ -66,6 +75,7 @@ static inline void vm_push(vm_env *env, size_t n);
 
 #define VM_CALL_HANDLER()                                        \
     do {                                                         \
+        PROFILING;                                               \
         if (OPCODE_IMPL(OPCODE).handler)                         \
             OPCODE_IMPL(OPCODE)                                  \
                 .handler(vm_get_op_value(env, &OPCODE.op1),      \
@@ -213,14 +223,19 @@ void vm_run(vm_env *env)
     OP(JGE) : VM_JGE();
     OP(JGT) : VM_JGT();
     OP(JNZ) : VM_JNZ();
-    OP(JMP) : GOTO(OPCODE.op1.value.id);
+    OP(JMP) : PROFILING;
+    GOTO(OPCODE.op1.value.id);
     OP(CALL) : VM_CALL(OPCODE.op1.value.id);
     OP(RET) : VM_RET();
 
-    OP(HALT) : goto terminate;
+    OP(HALT) : PROFILING;
+    goto terminate;
 
     END_OPCODES;
 terminate:
+#if defined(profile)
+    PROFILE_SHOW;
+#endif
     return;
 }
 

@@ -3,6 +3,10 @@ EXEC = as_exec
 CC ?= gcc
 CFLAGS = -Wall -std=gnu99 -g
 
+ifeq ($(strip $(PROFILE)),1)
+CFLAGS += -Dprofile
+endif
+
 TEMP0 ?= 1
 IN_FILE ?= ./tests/fib-iterative.s
 
