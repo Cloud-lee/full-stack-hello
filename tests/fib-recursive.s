@@ -11,7 +11,7 @@ call #6
 print #3
 halt
 
-; recursive
+; recursion
 xor #0 #2 #5
 jz #5 #9
 jnz #5 #11
