@@ -5,6 +5,7 @@
 #include "vm.h"
 #include "vm_codegen.h"
 #include "opcode.h"
+#include "profiler.h"
 
 #if !defined(__GNUC__)
 #error "Only gcc is supported at present"
@@ -18,12 +19,7 @@
 
 #define BEGIN_OPCODES                          \
     const static void *labels[] = {OP_LABELS}; \
-    int exec_instr_cnt = 0;                    \
     goto *labels[OPCODE.opcode]
-
-#define PROFILING exec_instr_cnt += 1;
-
-#define PROFILE_SHOW printf("instructions: %d\n", exec_instr_cnt);
 
 #define DISPATCH                     \
     do {                             \
@@ -45,21 +41,21 @@ static inline void vm_push(vm_env *env, size_t n);
 
 #define VM_CALL(n)               \
     do {                         \
-        PROFILING;               \
+        profiling();             \
         vm_push(env, env->r.pc); \
         GOTO(n);                 \
     } while (0)
 
 #define VM_RET()                     \
     do {                             \
-        PROFILING;                   \
+        profiling();                 \
         size_t pc = vm_pop(env) + 1; \
         GOTO(pc);                    \
     } while (0)
 
 #define VM_J_TYPE_INST(cond)                                     \
     do {                                                         \
-        PROFILING;                                               \
+        profiling();                                             \
         int gle = vm_get_op_value(env, &OPCODE.op1)->value.vint; \
         if (gle cond 0)                                          \
             GOTO(OPCODE.op2.value.id);                           \
@@ -75,7 +71,7 @@ static inline void vm_push(vm_env *env, size_t n);
 
 #define VM_CALL_HANDLER()                                        \
     do {                                                         \
-        PROFILING;                                               \
+        profiling();                                             \
         if (OPCODE_IMPL(OPCODE).handler)                         \
             OPCODE_IMPL(OPCODE)                                  \
                 .handler(vm_get_op_value(env, &OPCODE.op1),      \
@@ -223,18 +219,18 @@ void vm_run(vm_env *env)
     OP(JGE) : VM_JGE();
     OP(JGT) : VM_JGT();
     OP(JNZ) : VM_JNZ();
-    OP(JMP) : PROFILING;
+    OP(JMP) : profiling();
     GOTO(OPCODE.op1.value.id);
     OP(CALL) : VM_CALL(OPCODE.op1.value.id);
     OP(RET) : VM_RET();
 
-    OP(HALT) : PROFILING;
+    OP(HALT) : profiling();
     goto terminate;
 
     END_OPCODES;
 terminate:
 #if defined(profile)
-    PROFILE_SHOW;
+    show_profiling_info();
 #endif
     return;
 }

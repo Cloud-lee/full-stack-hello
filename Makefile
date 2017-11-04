@@ -23,7 +23,8 @@ OBJS = \
 	as.o \
 	opcode.o \
 	driver.o \
-	elf.o
+	elf.o \
+	profiler.o
 
 deps := $(OBJS:%.o=.%.o.d)
 
