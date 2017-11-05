@@ -1,7 +1,9 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "as.h"
 #include "elf.h"
 #include "vm.h"
 #include "vm_codegen.h"
@@ -16,6 +18,54 @@
         qs = c;          \
     } while (0)
 #define IS_ESC(c) (c == '\\')
+
+#define SYMBOL_TABLE_SIZE 1000
+
+struct __symbol_table {
+    char *labels[SYMBOL_TABLE_SIZE];
+    int address[SYMBOL_TABLE_SIZE];
+    int count;
+};
+
+static symbol_table symtab = {.count = 0};
+
+static void insert_to_symtab(char *label, int address)
+{
+    assert(symtab.count < SYMBOL_TABLE_SIZE);
+    for (int i = 0; i < symtab.count; i++) {
+        assert(strcmp(label, symtab.labels[i]) != 0);
+    }
+
+    symtab.labels[symtab.count] = strdup(label);
+    symtab.address[symtab.count] = address;
+    symtab.count++;
+}
+
+static int search_symtab(char *label)
+{
+    for (int i = 0; i < symtab.count; i++) {
+        if (strcmp(symtab.labels[i], label) == 0)
+            return symtab.address[i];
+    }
+    return -1;
+}
+
+static void addressing(vm_env *env)
+{
+    vm_inst *inst = NULL;
+    for (int i = 0; (inst = get_vm_inst(env, i)) != NULL; i++) {
+        if (inst->op1.type == LABEL) {
+            int new_addr = search_symtab(inst->op1.value.label);
+            assert(new_addr != -1);
+            inst->op1.value.id = new_addr;
+        }
+        if (inst->op2.type == LABEL) {
+            int new_addr = search_symtab(inst->op2.value.label);
+            assert(new_addr != -1);
+            inst->op2.value.id = new_addr;
+        }
+    }
+}
 
 /*
  * A customized version of strsep. It is different in that:
@@ -184,6 +234,10 @@ static inline vm_operand make_operand(vm_env *env, char *line, const char *data)
         op.type = TEMP;
         op.value.id = atoi(data + 1);
         break;
+    case ':':
+        op.type = LABEL;
+        op.value.label = strdup(data + 1);
+        break;
     case '"':
     case '\'':
         op.type = CONST;
@@ -231,18 +285,24 @@ static inline int make_result(vm_env *env, char *line, const char *data)
     return atoi(data + 1);
 }
 
-static void assemble_line(vm_env *env, char *line)
+static void assemble_line(vm_env *env, char *line, int pos)
 {
     char *line_backup = strdup(line);
     char *mnemonic = quoted_strsep(&line, " ");
+    const struct instruction *inst = find_inst(mnemonic);
+
+    if (!inst) {
+        insert_to_symtab(mnemonic, pos);
+        mnemonic = quoted_strsep(&line, " ");
+        inst = find_inst(mnemonic);
+        if (!inst)
+            FATALX(1, "instruction `%s' not found\n", mnemonic);
+    }
+
     char *op1 = quoted_strsep(&line, " ");
     char *op2 = quoted_strsep(&line, " ");
     char *result = quoted_strsep(&line, " ");
     vm_inst new_inst;
-    const struct instruction *inst = find_inst(mnemonic);
-
-    if (!inst)
-        FATALX(1, "instruction `%s' not found\n", mnemonic);
 
     memset(&new_inst, 0, sizeof(vm_inst));
 
@@ -265,15 +325,18 @@ void assemble_from_fd(vm_env *env, int fd)
     char *line = NULL;
     size_t size = 0;
     FILE *fp = fdopen(fd, "r");
+    int i = 0;
 
     while (getline(&line, &size, fp) != -1) {
         if (line[0] == ';' || line[0] == '\n')
             continue;
         /* Remove trailing newline feed */
         line[strcspn(line, "\r\n")] = 0;
-        assemble_line(env, line);
+        assemble_line(env, line, i);
+        i++;
     }
     free(line);
+    addressing(env);
 }
 
 #define ALIGN_TYPE long

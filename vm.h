@@ -13,9 +13,10 @@ typedef struct {
 typedef void (*vm_handler)(VM_HANDLER_ARGS);
 
 typedef struct {
-    enum { CONST, TEMP } type;
+    enum { CONST, TEMP, LABEL } type;
     union {
         int id;
+        char *label;
     } value;
 } vm_operand;
 
@@ -50,5 +51,8 @@ void vm_hook_opcode_handler(vm_env *, int, vm_handler);
 void vm_run(vm_env *env);
 
 void vm_set_temp_value(vm_env *env, int pos, int val);
+
+// access
+vm_inst *get_vm_inst(vm_env *env, int addr);
 
 #endif /* VM_H */

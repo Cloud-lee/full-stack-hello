@@ -3,6 +3,8 @@
 
 #include "vm.h"
 
+typedef struct __symbol_table symbol_table;
+
 void assemble_from_fd(vm_env *env, int fd);
 
 int write_to_elf(vm_env *env, int fd);

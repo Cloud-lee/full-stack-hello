@@ -432,3 +432,10 @@ void vm_seg_info_free_list(vm_seg_info *p)
         p = q;
     }
 }
+
+vm_inst *get_vm_inst(vm_env *env, int addr)
+{
+    if (addr >= env->insts_count)
+        return NULL;
+    return &env->insts[addr];
+}
