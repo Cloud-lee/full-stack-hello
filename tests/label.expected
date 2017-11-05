@@ -1,1 +1,10 @@
-success
+call success
+jmp success
+jz success
+jnz success
+jge success
+jge success
+jle success
+jle success
+jlt success
+jgt success
