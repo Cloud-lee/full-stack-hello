@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 
 #include "vm.h"
@@ -130,6 +131,39 @@ static void print_impl(VM_HANDLER_ARGS)
     }
 }
 
+static void clz_impl(VM_HANDLER_ARGS)
+{
+    if (VM_T(op1) == INT && VM_T(op2) == INT) {
+        if (VM_INT(op1) == 0) {
+            VM_INT(op2) = 32;
+            return;
+        }
+
+        uint32_t x = VM_UINT(op1);
+
+        VM_INT(op2) = 1;
+        if ((x >> 16) == 0) {
+            VM_INT(op2) += 16;
+            x <<= 16;
+        }
+        if ((x >> 24) == 0) {
+            VM_INT(op2) += 8;
+            x <<= 8;
+        }
+        if ((x >> 28) == 0) {
+            VM_INT(op2) += 4;
+            x <<= 4;
+        }
+        if ((x >> 30) == 0) {
+            VM_INT(op2) += 2;
+            x <<= 2;
+        }
+        VM_INT(op2) = VM_INT(op2) - (x >> 31);
+    } else {
+        UNIMPL;
+    }
+}
+
 void hook_opcodes(vm_env *env)
 {
     vm_hook_opcode_handler(env, OP_PRINT, print_impl);
@@ -145,4 +179,5 @@ void hook_opcodes(vm_env *env)
     vm_hook_opcode_handler(env, OP_LSL, lsl_impl);
     vm_hook_opcode_handler(env, OP_LSR, lsr_impl);
     vm_hook_opcode_handler(env, OP_ASR, asr_impl);
+    vm_hook_opcode_handler(env, OP_CLZ, clz_impl);
 }

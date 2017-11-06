@@ -213,6 +213,7 @@ void vm_run(vm_env *env)
     OP(LSR) : VM_CALL_HANDLER();
     OP(ASR) : VM_CALL_HANDLER();
     OP(PRINT) : VM_CALL_HANDLER();
+    OP(CLZ) : VM_CALL_HANDLER();
     OP(JLT) : VM_JLT();
     OP(JLE) : VM_JLE();
     OP(JZ) : VM_JZ();
