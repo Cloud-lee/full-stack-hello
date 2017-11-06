@@ -37,8 +37,8 @@ else or $0 #3 #1 ; t0 = t3
      add #5 $1 #5 ; i += 1
      jmp :func
 
-; result print #3
-result halt
+result print #3
+       halt
 
-; zero print $0
-zero halt
+zero print $0
+     halt

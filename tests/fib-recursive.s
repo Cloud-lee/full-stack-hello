@@ -8,8 +8,8 @@
      call :func
 
 ; print result
-     print #3
-     halt
+      print #3
+      halt
 
 ; recursion
 func xor #0 #2 #5

@@ -10,9 +10,9 @@
      halt
 
 ; tail recursion
-tail xor #0 $0 #4
-     jz #4 :iszero
-     jnz #4 :notzero
+tail   xor #0 $0 #4
+       jz #4 :iszero
+       jnz #4 :notzero
 iszero or #1 $0 #3
        ret
 
