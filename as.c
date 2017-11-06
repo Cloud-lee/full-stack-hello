@@ -44,7 +44,7 @@ static void insert_to_symtab(char *label, int address)
 static int search_symtab(char *label)
 {
     for (int i = 0; i < symtab.count; i++) {
-        if (strcmp(symtab.labels[i], label) == 0)
+        if (!strcmp(symtab.labels[i], label))
             return symtab.address[i];
     }
     return -1;
