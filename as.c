@@ -50,7 +50,7 @@ static int search_symtab(char *label)
     return -1;
 }
 
-static void addressing(vm_env *env)
+static void lookup_address(vm_env *env)
 {
     vm_inst *inst = NULL;
     for (int i = 0; (inst = get_vm_inst(env, i)) != NULL; i++) {
@@ -336,7 +336,7 @@ void assemble_from_fd(vm_env *env, int fd)
         i++;
     }
     free(line);
-    addressing(env);
+    lookup_address(env);
 }
 
 #define ALIGN_TYPE long
