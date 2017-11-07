@@ -1,8 +1,4 @@
-     or $0 $0 #1
-     clz #1 #2
-     print #2
-
-     add #1 $1 #1
+     or $0 $1 #1
      clz #1 #2
      print #2
 
