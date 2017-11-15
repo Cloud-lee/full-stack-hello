@@ -17,22 +17,18 @@
 
 #define OP(name) OP_##name
 
-#define BEGIN_OPCODES                          \
-    const static void *labels[] = {OP_LABELS}; \
-    goto *labels[OPCODE.opcode]
+#define BEGIN_OPCODES const static void *labels[] = {OP_LABELS};
 
-#define DISPATCH                     \
-    do {                             \
-        ++env->r.pc;                 \
-        goto *labels[OPCODE.opcode]; \
+#define DISPATCH     \
+    do {             \
+        ++env->r.pc; \
     } while (0)
 
-#define GOTO(n)                      \
-    do {                             \
-        env->r.from = env->r.pc;     \
-        env->r.to = n;               \
-        env->r.pc = n;               \
-        goto *labels[OPCODE.opcode]; \
+#define GOTO(n)                  \
+    do {                         \
+        env->r.from = env->r.pc; \
+        env->r.to = n;           \
+        env->r.pc = n;           \
     } while (0)
 
 #define END_OPCODES
@@ -59,7 +55,8 @@ static inline void vm_push(vm_env *env, size_t n);
         int gle = vm_get_op_value(env, &OPCODE.op1)->value.vint; \
         if (gle cond 0)                                          \
             GOTO(OPCODE.op2.value.id);                           \
-        DISPATCH;                                                \
+        else                                                     \
+            DISPATCH;                                            \
     } while (0)
 
 #define VM_JLT() VM_J_TYPE_INST(<)
@@ -198,42 +195,75 @@ static inline vm_value *vm_get_op_value(vm_env *env, const vm_operand *op)
 
 void vm_run(vm_env *env)
 {
-    BEGIN_OPCODES;
+    /* BEGIN_OPCODES; */
 
-    OP(ADD) : VM_CALL_HANDLER();
-    OP(SUB) : VM_CALL_HANDLER();
-    OP(MUL) : VM_CALL_HANDLER();
-    OP(DIV) : VM_CALL_HANDLER();
-    OP(MOD) : VM_CALL_HANDLER();
-    OP(AND) : VM_CALL_HANDLER();
-    OP(OR) : VM_CALL_HANDLER();
-    OP(NOT) : VM_CALL_HANDLER();
-    OP(XOR) : VM_CALL_HANDLER();
-    OP(LSL) : VM_CALL_HANDLER();
-    OP(LSR) : VM_CALL_HANDLER();
-    OP(ASR) : VM_CALL_HANDLER();
-    OP(PRINT) : VM_CALL_HANDLER();
-    OP(CLZ) : VM_CALL_HANDLER();
-    OP(JLT) : VM_JLT();
-    OP(JLE) : VM_JLE();
-    OP(JZ) : VM_JZ();
-    OP(JGE) : VM_JGE();
-    OP(JGT) : VM_JGT();
-    OP(JNZ) : VM_JNZ();
-    OP(JMP) : profiling();
-    GOTO(OPCODE.op1.value.id);
-    OP(CALL) : VM_CALL(OPCODE.op1.value.id);
-    OP(RET) : VM_RET();
-
-    OP(HALT) : profiling();
-    goto terminate;
-
-    END_OPCODES;
-terminate:
+    while (1) {
+        /* printf("%d\n", OPCODE.opcode); */
+        switch (OPCODE.opcode) {
+        case OP(ADD):
+        case OP(SUB):
+        case OP(MUL):
+        case OP(DIV):
+        case OP(MOD):
+        case OP(AND):
+        case OP(OR):
+        case OP(NOT):
+        case OP(XOR):
+        case OP(LSL):
+        case OP(LSR):
+        case OP(ASR):
+        case OP(PRINT):
+        case OP(CLZ): {
+            VM_CALL_HANDLER();
+            break;
+        }
+        case OP(JLT): {
+            VM_JLT();
+            break;
+        }
+        case OP(JLE): {
+            VM_JLE();
+            break;
+        }
+        case OP(JGT): {
+            VM_JGT();
+            break;
+        }
+        case OP(JGE): {
+            VM_JGE();
+            break;
+        }
+        case OP(JZ): {
+            VM_JZ();
+            break;
+        }
+        case OP(JNZ): {
+            VM_JNZ();
+            break;
+        }
+        case OP(JMP): {
+            profiling();
+            GOTO(OPCODE.op1.value.id);
+            break;
+        }
+        case OP(CALL): {
+            VM_CALL(OPCODE.op1.value.id);
+            break;
+        }
+        case OP(RET): {
+            VM_RET();
+            break;
+        }
+        case OP(HALT): {
+            profiling();
+            END_OPCODES;
 #if defined(profile)
-    show_profiling_info();
+            show_profiling_info();
 #endif
-    return;
+            return;
+        }
+        }
+    }
 }
 
 inline void vm_set_temp_value(vm_env *env, int pos, int val)
