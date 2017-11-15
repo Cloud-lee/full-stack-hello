@@ -198,7 +198,6 @@ void vm_run(vm_env *env)
     /* BEGIN_OPCODES; */
 
     while (1) {
-        /* printf("%d\n", OPCODE.opcode); */
         switch (OPCODE.opcode) {
         case OP(ADD):
         case OP(SUB):
