@@ -195,23 +195,60 @@ static inline vm_value *vm_get_op_value(vm_env *env, const vm_operand *op)
 
 void vm_run(vm_env *env)
 {
-    /* BEGIN_OPCODES; */
-
     while (1) {
         switch (OPCODE.opcode) {
-        case OP(ADD):
-        case OP(SUB):
-        case OP(MUL):
-        case OP(DIV):
-        case OP(MOD):
-        case OP(AND):
-        case OP(OR):
-        case OP(NOT):
-        case OP(XOR):
-        case OP(LSL):
-        case OP(LSR):
-        case OP(ASR):
-        case OP(PRINT):
+        case OP(ADD): {
+            VM_CALL_HANDLER();
+            break;
+        }
+        case OP(SUB): {
+            VM_CALL_HANDLER();
+            break;
+        }
+        case OP(MUL): {
+            VM_CALL_HANDLER();
+            break;
+        }
+        case OP(DIV): {
+            VM_CALL_HANDLER();
+            break;
+        }
+        case OP(MOD): {
+            VM_CALL_HANDLER();
+            break;
+        }
+        case OP(AND): {
+            VM_CALL_HANDLER();
+            break;
+        }
+        case OP(OR): {
+            VM_CALL_HANDLER();
+            break;
+        }
+        case OP(NOT): {
+            VM_CALL_HANDLER();
+            break;
+        }
+        case OP(XOR): {
+            VM_CALL_HANDLER();
+            break;
+        }
+        case OP(LSL): {
+            VM_CALL_HANDLER();
+            break;
+        }
+        case OP(LSR): {
+            VM_CALL_HANDLER();
+            break;
+        }
+        case OP(ASR): {
+            VM_CALL_HANDLER();
+            break;
+        }
+        case OP(PRINT): {
+            VM_CALL_HANDLER();
+            break;
+        }
         case OP(CLZ): {
             VM_CALL_HANDLER();
             break;
